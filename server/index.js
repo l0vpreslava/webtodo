@@ -12,16 +12,17 @@ app.get("/todos", (req, res) => {
 })
 
 app.post("/todos", (req, res) => {
-    const { status, description } = req.body
-    if (typeof status !== "boolean" || typeof description !== "string") {
+    let { done, description } = req.body
+    if (!done) done = false;
+    if (typeof done !== "boolean" || typeof description !== "string") {
         res.status(400).end()
         return
     }
 
     const id = idCounter++
-    const todo = { id, status, description }
+    const todo = { id, done, description }
     todos.set(id, todo)
-    res.end()
+    res.send(todo)
 })
 
 app.delete("/todos/:id", (req, res) => {
@@ -32,13 +33,13 @@ app.delete("/todos/:id", (req, res) => {
 
 app.post("/todos/:id", (req, res) => {
     const id = Number(req.params.id)
-    const { status, description } = req.body
-    if (typeof status !== "boolean" || typeof description !== "string") {
+    const { done, description } = req.body
+    if (typeof done !== "boolean" || typeof description !== "string") {
         res.status(400).end()
         return
     }
 
-    const todo = { id, status, description }
+    const todo = { id, done, description }
     todos.set(id, todo)
     res.end()
 })
