@@ -1,14 +1,11 @@
+import { TodoService } from "./todo_service.js"
+
 textBoxForm.onsubmit = async (event) => {
     event.preventDefault()
 
     try {
-        const description = textBoxForm.description.value
-        const res = await postJson("/todos", { description })
-        if (!res.ok) {
-            throw "Could not save todo on the server :("
-        }
-
-        const todo = await res.json()
+        const todoService = new TodoService()
+        const todo = await todoService.create({ description: textBoxForm.description.value })
         todoElements.append(createTodoElement(todo))
     } finally {
         textBoxForm.description.value = ""
@@ -16,20 +13,21 @@ textBoxForm.onsubmit = async (event) => {
 }
 
 async function main() {
-    const res = await fetch("/todos")
-    const todos = await res.json()
+    const todoService = new TodoService()
+    const todos = await todoService.list()
     for (const todo of todos) {
         todoElements.append(createTodoElement(todo))
     }
 }
 
 function createTodoElement({ id, description, done }) {
+    const todoService = new TodoService()
+
     const div = document.createElement("div")
     div.id = `todo-${id}`
 
-    const save = (event) => {
-        const req = { id, description: text.value, done: checkBox.checked }
-        postJson(`/todos/${id}`, req)
+    const save = async (event) => {
+        await todoService.update({ id, description: text.value, done: checkBox.checked })
     }
 
     const checkBox = document.createElement("input")
@@ -44,8 +42,8 @@ function createTodoElement({ id, description, done }) {
 
     const deleteButton = document.createElement("button")
     deleteButton.innerText = "🗑️"
-    deleteButton.onclick = (event) => {
-        fetch(`/todos/${id}`, { method: "DELETE" })
+    deleteButton.onclick = async (event) => {
+        await todoService.delete(id)
         div.remove()
     }
 
@@ -53,16 +51,6 @@ function createTodoElement({ id, description, done }) {
     div.append(checkBox, text, deleteButton)
 
     return div
-}
-
-function postJson(url, body) {
-    return fetch(url, {
-        method: "POST",
-        body: JSON.stringify(body),
-        headers: {
-            "Content-Type": "application/json",
-        },
-    })
 }
 
 main()
